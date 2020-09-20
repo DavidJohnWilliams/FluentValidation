@@ -56,38 +56,16 @@ namespace FluentValidation {
 		/// </summary>
 		/// <param name="validator">The validator to set</param>
 		/// <returns></returns>
-		IRuleBuilderOptions<T, TProperty> SetValidator(IPropertyValidator validator);
-
-		/// <summary>
-		/// Associates an instance of IValidator with the current property rule.
-		/// </summary>
-		/// <param name="validator">The validator to use</param>
-		/// <param name="ruleSets"></param>
-		IRuleBuilderOptions<T, TProperty> SetValidator(IValidator<TProperty> validator, params string[] ruleSets);
-
-		/// <summary>
-		/// Associates a validator provider with the current property rule.
-		/// </summary>
-		/// <param name="validatorProvider">The validator provider to use</param>
-		/// <param name="ruleSets"></param>
-		IRuleBuilderOptions<T, TProperty> SetValidator<TValidator>(Func<T, TValidator> validatorProvider, params string[] ruleSets)
-			where TValidator : IValidator<TProperty>;
-
-		/// <summary>
-		/// Associates a validator provider with the current property rule.
-		/// </summary>
-		/// <param name="validatorProvider">The validator provider to use</param>
-		/// <param name="ruleSets"></param>
-		IRuleBuilderOptions<T, TProperty> SetValidator<TValidator>(Func<T, TProperty, TValidator> validatorProvider, params string[] ruleSets)
-			where TValidator : IValidator<TProperty>;
+		IRuleBuilderOptions<T, TProperty, TValidator> SetValidator<TValidator>(TValidator validator)
+			where TValidator : IPropertyValidator;
 	}
-
 
 	/// <summary>
 	/// Rule builder
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	/// <typeparam name="TProperty"></typeparam>
+	[Obsolete("Please use IRuleBuilderOptions<T,TProperty,TValidator> instead")]
 	public interface IRuleBuilderOptions<T, out TProperty> : IRuleBuilder<T, TProperty> {
 
 		/// <summary>
@@ -96,12 +74,23 @@ namespace FluentValidation {
 		/// <param name="configurator">Action to configure the object.</param>
 		/// <returns></returns>
 		IRuleBuilderOptions<T, TProperty> Configure(Action<PropertyRule> configurator);
+	}
 
+	public interface IRuleBuilderOptions<T, out TProperty, TValidator>
+#pragma warning disable 618
+		: IRuleBuilder<T, TProperty>, IRuleBuilderOptions<T,TProperty> {
+#pragma warning restore 618
+		/// <summary>
+		/// Configures the current object.
+		/// </summary>
+		/// <param name="configurator">Action to configure the object.</param>
+		/// <returns></returns>
+		IRuleBuilderOptions<T, TProperty, TValidator> Configure(Action<PropertyRule, TValidator> configurator);
 
 		/// <summary>
 		/// Creates a scope for declaring dependent rules.
 		/// </summary>
-		IRuleBuilderOptions<T, TProperty> DependentRules(Action action);
+		IRuleBuilderOptions<T, TProperty, TValidator> DependentRules(Action action);
 	}
 
 	/// <summary>

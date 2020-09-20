@@ -19,128 +19,96 @@
 namespace FluentValidation.Internal {
 	using System;
 	using System.Collections.Generic;
-	using System.Linq.Expressions;
 	using Validators;
 
-	/// <summary>
-	/// Builds a validation rule and constructs a validator.
-	/// </summary>
-	/// <typeparam name="T">Type of object being validated</typeparam>
-	/// <typeparam name="TProperty">Type of property being validated</typeparam>
+#pragma warning disable 618
 	internal class RuleBuilder<T, TProperty> : IRuleBuilderOptions<T, TProperty>, IRuleBuilderInitial<T, TProperty>, IRuleBuilderInitialCollection<T,TProperty> {
-		/// <summary>
-		/// The rule being created by this RuleBuilder.
-		/// </summary>
-		public PropertyRule Rule { get; }
+#pragma warning restore 618
+		private readonly PropertyRule _rule;
+		private readonly AbstractValidator<T> _parentValidator;
 
-		/// <summary>
-		/// Parent validator
-		/// </summary>
-		public AbstractValidator<T> ParentValidator { get; }
-
-		/// <summary>
-		/// Creates a new instance of the <see cref="RuleBuilder{T,TProperty}">RuleBuilder</see> class.
-		/// </summary>
 		public RuleBuilder(PropertyRule rule, AbstractValidator<T> parent) {
-			Rule = rule;
-			ParentValidator = parent;
+			_rule = rule;
+			_parentValidator = parent;
 		}
 
-		/// <summary>
-		/// Sets the validator associated with the rule.
-		/// </summary>
-		/// <param name="validator">The validator to set</param>
-		/// <returns></returns>
-		public IRuleBuilderOptions<T, TProperty> SetValidator(IPropertyValidator validator) {
-			validator.Guard("Cannot pass a null validator to SetValidator.", nameof(validator));
-			Rule.AddValidator(validator);
-			return this;
-		}
-
-		/// <summary>
-		/// Sets the validator associated with the rule. Use with complex properties where an IValidator instance is already declared for the property type.
-		/// </summary>
-		/// <param name="validator">The validator to set</param>
-		/// <param name="ruleSets"></param>
-		public IRuleBuilderOptions<T, TProperty> SetValidator(IValidator<TProperty> validator, params string[] ruleSets) {
-			validator.Guard("Cannot pass a null validator to SetValidator", nameof(validator));
-			var adaptor = new ChildValidatorAdaptor<T,TProperty>(validator, validator.GetType()) {
-				RuleSets = ruleSets
-			};
-			SetValidator(adaptor);
-			return this;
-		}
-
-		/// <summary>
-		/// Sets the validator associated with the rule. Use with complex properties where an IValidator instance is already declared for the property type.
-		/// </summary>
-		/// <param name="validatorProvider">The validator provider to set</param>
-		/// <param name="ruleSets"></param>
-		public IRuleBuilderOptions<T, TProperty> SetValidator<TValidator>(Func<T, TValidator> validatorProvider, params string[] ruleSets)
-			where TValidator : IValidator<TProperty> {
-			validatorProvider.Guard("Cannot pass a null validatorProvider to SetValidator", nameof(validatorProvider));
-			SetValidator(new ChildValidatorAdaptor<T,TProperty>(context => validatorProvider((T) context.InstanceToValidate), typeof (TValidator)) {
-				RuleSets = ruleSets
-			});
-			return this;
-		}
-
-		/// <summary>
-		/// Associates a validator provider with the current property rule.
-		/// </summary>
-		/// <param name="validatorProvider">The validator provider to use</param>
-		/// <param name="ruleSets"></param>
-		public IRuleBuilderOptions<T, TProperty> SetValidator<TValidator>(Func<T, TProperty, TValidator> validatorProvider, params string[] ruleSets) where TValidator : IValidator<TProperty> {
-			validatorProvider.Guard("Cannot pass a null validatorProvider to SetValidator", nameof(validatorProvider));
-			SetValidator(new ChildValidatorAdaptor<T,TProperty>(context => validatorProvider((T) context.InstanceToValidate, (TProperty) context.PropertyValue), typeof (TValidator)) {
-				RuleSets = ruleSets
-			});
-			return this;
+		public IRuleBuilderOptions<T, TProperty, TValidator> SetValidator<TValidator>(TValidator validator) where TValidator : IPropertyValidator {
+			if (validator == null) throw new ArgumentNullException(nameof(validator), "Cannot pass a null validator to SetValidator.");
+			_rule.AddValidator(validator);
+			return new ScopedRuleBuilder<T, TProperty, TValidator>(_rule, _parentValidator, validator);
 		}
 
 		IRuleBuilderInitial<T, TProperty> IRuleBuilderInitial<T, TProperty>.Configure(Action<PropertyRule> configurator) {
-			configurator(Rule);
+			configurator(_rule);
 			return this;
 		}
 
+#pragma warning disable 618
 		IRuleBuilderOptions<T, TProperty> IRuleBuilderOptions<T, TProperty>.Configure(Action<PropertyRule> configurator) {
-			configurator(Rule);
+			configurator(_rule);
 			return this;
 		}
+#pragma warning restore 618
 
 		IRuleBuilderInitialCollection<T, TProperty> IRuleBuilderInitialCollection<T, TProperty>.Configure(Action<CollectionPropertyRule<T, TProperty>> configurator) {
-			configurator((CollectionPropertyRule<T, TProperty>) Rule);
+			configurator((CollectionPropertyRule<T, TProperty>) _rule);
 			return this;
 		}
 
 		public IRuleBuilderInitial<T, TNew> Transform<TNew>(Func<TProperty, TNew> transformationFunc) {
 			if (transformationFunc == null) throw new ArgumentNullException(nameof(transformationFunc));
-			Rule.Transformer = transformationFunc.CoerceToNonGeneric();
-			return new RuleBuilder<T, TNew>(Rule, ParentValidator);
+			_rule.Transformer = transformationFunc.CoerceToNonGeneric();
+			return new RuleBuilder<T, TNew>(_rule, _parentValidator);
+		}
+	}
+
+	internal class ScopedRuleBuilder<T, TProperty, TValidator> : IRuleBuilderOptions<T,TProperty,TValidator> {
+		private readonly PropertyRule _rule;
+		private readonly AbstractValidator<T> _parentValidator;
+		private readonly TValidator _validator;
+
+		public ScopedRuleBuilder(PropertyRule rule, AbstractValidator<T> parentValidator, TValidator validator) {
+			_rule = rule;
+			_parentValidator = parentValidator;
+			_validator = validator;
 		}
 
-		/// <summary>
-		/// Creates a scope for declaring dependent rules.
-		/// </summary>
-		public IRuleBuilderOptions<T, TProperty> DependentRules(Action action) {
+		public IRuleBuilderOptions<T, TProperty, TNewValidator> SetValidator<TNewValidator>(TNewValidator validator) where TNewValidator : IPropertyValidator {
+			if (validator == null) throw new ArgumentNullException(nameof(validator), "Cannot pass a null validator to SetValidator.");
+			_rule.AddValidator(validator);
+			return new ScopedRuleBuilder<T, TProperty, TNewValidator>(_rule, _parentValidator, validator);
+		}
+
+		public IRuleBuilderOptions<T, TProperty, TValidator> Configure(Action<PropertyRule, TValidator> configurator) {
+			configurator(_rule, _validator);
+			return this;
+		}
+
+		public IRuleBuilderOptions<T, TProperty, TValidator> DependentRules(Action action) {
 			var dependencyContainer = new List<IValidationRule>();
 
 			// Capture any rules added to the parent validator inside this delegate.
-			using (ParentValidator.Rules.Capture(dependencyContainer.Add)) {
+			using (_parentValidator.Rules.Capture(dependencyContainer.Add)) {
 				action();
 			}
 
-			if (Rule.RuleSets.Length > 0) {
+			if (_rule.RuleSets.Length > 0) {
 				foreach (var dependentRule in dependencyContainer) {
 					if (dependentRule is PropertyRule propRule && propRule.RuleSets.Length == 0) {
-						propRule.RuleSets = Rule.RuleSets;
+						propRule.RuleSets = _rule.RuleSets;
 					}
 				}
 			}
 
-			Rule.DependentRules.AddRange(dependencyContainer);
+			_rule.DependentRules.AddRange(dependencyContainer);
 			return this;
 		}
-	}
 
+#pragma warning disable 618
+		public IRuleBuilderOptions<T, TProperty> Configure(Action<PropertyRule> configurator) {
+			configurator(_rule);
+			return this;
+		}
+#pragma warning restore 618
+	}
 }

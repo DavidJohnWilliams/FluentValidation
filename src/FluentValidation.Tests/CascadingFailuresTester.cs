@@ -64,7 +64,8 @@ namespace FluentValidation.Tests {
 		public void Validation_continues_on_failure_when_set_to_Stop_globally_and_overriden_at_rule_level() {
 			ValidatorOptions.Global.CascadeMode = CascadeMode.Stop;
 
-			validator.RuleFor(x => x.Surname).Cascade(CascadeMode.Continue).NotNull().Equal("Foo");
+			validator.RuleFor(x => x.Surname)
+				.Cascade(CascadeMode.Continue).NotNull().Equal("Foo");
 			var results = validator.Validate(new Person());
 			results.Errors.Count.ShouldEqual(2);
 		}
