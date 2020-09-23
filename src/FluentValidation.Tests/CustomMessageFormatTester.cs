@@ -41,7 +41,7 @@ namespace FluentValidation.Tests {
 
 		[Fact]
 		public void Uses_custom_delegate_for_building_message() {
-			validator.RuleFor(x => x.Surname).NotNull().Configure(cfg => {
+			validator.RuleFor(x => x.Surname).NotNull().Configure((cfg, v) => {
 				cfg.MessageBuilder = context => "Test " + ((Person)context.InstanceToValidate).Id;
 			});
 
@@ -51,7 +51,7 @@ namespace FluentValidation.Tests {
 
 		[Fact]
 		public void Uses_custom_delegate_for_building_message_only_for_specific_validator() {
-			validator.RuleFor(x => x.Surname).NotNull().NotEmpty().Configure(cfg => {
+			validator.RuleFor(x => x.Surname).NotNull().NotEmpty().Configure((cfg, v) => {
 				cfg.MessageBuilder = context => {
 					if (context.PropertyValidator is NotNullValidator)
 						return "Foo";

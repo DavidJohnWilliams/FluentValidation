@@ -18,7 +18,6 @@
 
 namespace FluentValidation {
 	using System;
-	using System.Collections.Generic;
 	using Internal;
 	using Validators;
 
@@ -60,13 +59,18 @@ namespace FluentValidation {
 			where TValidator : IPropertyValidator;
 	}
 
+
+	public interface IRuleBuilderOptionsBase<T, out TProperty, TValidator> : IRuleBuilder<T,TProperty> {
+		IRuleBuilderOptions<T, TProperty, TValidator> Configure(Action<PropertyRule, TValidator> configurator);
+	}
+
 	/// <summary>
 	/// Rule builder
 	/// </summary>
 	/// <typeparam name="T"></typeparam>
 	/// <typeparam name="TProperty"></typeparam>
 	[Obsolete("Please use IRuleBuilderOptions<T,TProperty,TValidator> instead")]
-	public interface IRuleBuilderOptions<T, out TProperty> : IRuleBuilder<T, TProperty> {
+	public interface IRuleBuilderOptions<T, out TProperty> : IRuleBuilderOptionsBase<T, TProperty, IPropertyValidator> {
 
 		/// <summary>
 		/// Configures the current object.
@@ -78,14 +82,26 @@ namespace FluentValidation {
 
 	public interface IRuleBuilderOptions<T, out TProperty, TValidator>
 #pragma warning disable 618
-		: IRuleBuilder<T, TProperty>, IRuleBuilderOptions<T,TProperty> {
+		: IRuleBuilder<T, TProperty>, IRuleBuilderOptionsBase<T,TProperty, TValidator> {
 #pragma warning restore 618
+		// This interface needs to inherit from the legacy IRuleBuilderOptions to allow users who still use the old
+		// interface to implicitly cast the return value of methods that return this interface. For example, we historically
+		// recommended that custom extensions take an IRuleBuilderOptions<T,TProp> and return one, but now the internal
+		// methods return this newer interface instead. By implementing the old interface too, we can have an implicit
+		// conversion that won't break end users' code. However this means we have to re-declare the Configure method
+		// as otherwise the compiler won't know whether to use the one that's implicitly imported via IRuleBuilderOptionsBase
+		// or the one that's imported by IRuleBuilderOptions<T,TProperty> (which also inherits from IRuleBuilderOptionsBase).
+		// This can all be cleaned up once we remove the legacy interfaces, probably in FV 11.
+
 		/// <summary>
 		/// Configures the current object.
 		/// </summary>
 		/// <param name="configurator">Action to configure the object.</param>
 		/// <returns></returns>
-		IRuleBuilderOptions<T, TProperty, TValidator> Configure(Action<PropertyRule, TValidator> configurator);
+		new IRuleBuilderOptions<T, TProperty, TValidator> Configure(Action<PropertyRule, TValidator> configurator);
+
+		[Obsolete("Use the other overload of Configure which takes an Action<PropertyRule, Validator>")]
+		IRuleBuilderOptions<T, TProperty, TValidator> Configure(Action<PropertyRule> configurator);
 
 		/// <summary>
 		/// Creates a scope for declaring dependent rules.

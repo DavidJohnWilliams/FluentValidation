@@ -22,7 +22,7 @@ namespace FluentValidation.Internal {
 	using Validators;
 
 #pragma warning disable 618
-	internal class RuleBuilder<T, TProperty> : IRuleBuilderOptions<T, TProperty>, IRuleBuilderInitial<T, TProperty>, IRuleBuilderInitialCollection<T,TProperty> {
+	internal class RuleBuilder<T, TProperty> : IRuleBuilderInitial<T, TProperty>, IRuleBuilderInitialCollection<T,TProperty> {
 #pragma warning restore 618
 		private readonly PropertyRule _rule;
 		private readonly AbstractValidator<T> _parentValidator;
@@ -43,13 +43,6 @@ namespace FluentValidation.Internal {
 			return this;
 		}
 
-#pragma warning disable 618
-		IRuleBuilderOptions<T, TProperty> IRuleBuilderOptions<T, TProperty>.Configure(Action<PropertyRule> configurator) {
-			configurator(_rule);
-			return this;
-		}
-#pragma warning restore 618
-
 		IRuleBuilderInitialCollection<T, TProperty> IRuleBuilderInitialCollection<T, TProperty>.Configure(Action<CollectionPropertyRule<T, TProperty>> configurator) {
 			configurator((CollectionPropertyRule<T, TProperty>) _rule);
 			return this;
@@ -62,7 +55,7 @@ namespace FluentValidation.Internal {
 		}
 	}
 
-	internal class ScopedRuleBuilder<T, TProperty, TValidator> : IRuleBuilderOptions<T,TProperty,TValidator> {
+	public class ScopedRuleBuilder<T, TProperty, TValidator> : IRuleBuilderOptions<T,TProperty,TValidator>, IRuleBuilderOptions<T,TProperty,IPropertyValidator> where TValidator : IPropertyValidator {
 		private readonly PropertyRule _rule;
 		private readonly AbstractValidator<T> _parentValidator;
 		private readonly TValidator _validator;
@@ -82,6 +75,15 @@ namespace FluentValidation.Internal {
 		public IRuleBuilderOptions<T, TProperty, TValidator> Configure(Action<PropertyRule, TValidator> configurator) {
 			configurator(_rule, _validator);
 			return this;
+		}
+
+		IRuleBuilderOptions<T, TProperty, TValidator> IRuleBuilderOptions<T, TProperty, TValidator>.Configure(Action<PropertyRule> configurator) {
+			configurator(_rule);
+			return this;
+		}
+
+		IRuleBuilderOptions<T, TProperty, IPropertyValidator> IRuleBuilderOptions<T, TProperty, IPropertyValidator>.Configure(Action<PropertyRule> configurator) {
+			throw new NotImplementedException();
 		}
 
 		public IRuleBuilderOptions<T, TProperty, TValidator> DependentRules(Action action) {
@@ -105,10 +107,15 @@ namespace FluentValidation.Internal {
 		}
 
 #pragma warning disable 618
-		public IRuleBuilderOptions<T, TProperty> Configure(Action<PropertyRule> configurator) {
-			configurator(_rule);
+		public IRuleBuilderOptions<T, TProperty, IPropertyValidator> Configure(Action<PropertyRule, IPropertyValidator> configurator) {
+			configurator(_rule, _validator);
 			return this;
 		}
-#pragma warning restore 618
+
+		IRuleBuilderOptions<T, TProperty, IPropertyValidator> IRuleBuilderOptions<T, TProperty, IPropertyValidator>.DependentRules(Action action) {
+			DependentRules(action);
+			return this;
+		}
 	}
+#pragma warning restore 618
 }
