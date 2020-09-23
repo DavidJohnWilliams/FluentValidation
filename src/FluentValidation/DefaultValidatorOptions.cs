@@ -329,7 +329,7 @@ namespace FluentValidation {
 		/// <returns></returns>
 		public static IRuleBuilderOptions<T, TProperty, TValidator> WithState<T, TProperty, TValidator>(this IRuleBuilderOptionsBase<T, TProperty, TValidator> rule, Func<T, object> stateProvider) where TValidator : IPropertyValidator {
 			stateProvider.Guard("A lambda expression must be passed to WithState", nameof(stateProvider));
-			var wrapper = new Func<PropertyValidatorContext, object>(ctx => stateProvider((T) ctx.InstanceToValidate));
+			var wrapper = new Func<IPropertyValidatorContext<object,object>, object>(ctx => stateProvider((T) ctx.InstanceToValidate));
 			return rule.Configure((config, val) => val.Options.CustomStateProvider = wrapper);
 		}
 
@@ -344,7 +344,7 @@ namespace FluentValidation {
 		public static IRuleBuilderOptions<T, TProperty, TValidator> WithState<T, TProperty, TValidator>(this IRuleBuilderOptionsBase<T, TProperty, TValidator> rule, Func<T, TProperty, object> stateProvider) where TValidator : IPropertyValidator {
 			stateProvider.Guard("A lambda expression must be passed to WithState", nameof(stateProvider));
 
-			var wrapper = new Func<PropertyValidatorContext, object>(ctx => {
+			var wrapper = new Func<IPropertyValidatorContext<object,object>, object>(ctx => {
 				return stateProvider((T) ctx.InstanceToValidate, (TProperty) ctx.PropertyValue);
 			});
 
@@ -374,7 +374,7 @@ namespace FluentValidation {
 		public static IRuleBuilderOptions<T, TProperty, TValidator> WithSeverity<T, TProperty, TValidator>(this IRuleBuilderOptionsBase<T, TProperty, TValidator> rule, Func<T, Severity> severityProvider) where TValidator : IPropertyValidator {
 			severityProvider.Guard("A lambda expression must be passed to WithSeverity", nameof(severityProvider));
 
-			Severity SeverityProvider(PropertyValidatorContext ctx) {
+			Severity SeverityProvider(IPropertyValidatorContext<object,object> ctx) {
 				return severityProvider((T)ctx.InstanceToValidate);
 			}
 
@@ -392,7 +392,7 @@ namespace FluentValidation {
 		public static IRuleBuilderOptions<T, TProperty, TValidator> WithSeverity<T, TProperty, TValidator>(this IRuleBuilderOptionsBase<T, TProperty, TValidator> rule, Func<T, TProperty, Severity> severityProvider) where TValidator : IPropertyValidator {
 			severityProvider.Guard("A lambda expression must be passed to WithSeverity", nameof(severityProvider));
 
-			Severity SeverityProvider(PropertyValidatorContext ctx) {
+			Severity SeverityProvider(IPropertyValidatorContext<object,object> ctx) {
 				return severityProvider((T)ctx.InstanceToValidate, (TProperty)ctx.PropertyValue);
 			}
 

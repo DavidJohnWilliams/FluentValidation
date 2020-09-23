@@ -33,13 +33,15 @@ namespace FluentValidation {
 		/// Whether this is a child collection context.
 		/// </summary>
 		bool IsChildCollectionContext { get; }
-	}
 
-	public interface IValidationContext : IValidationContext<object> {
 		/// <summary>
 		/// Parent validation context.
 		/// </summary>
 		IValidationContext ParentContext { get; }
+	}
+
+	public interface IValidationContext : IValidationContext<object> {
+
 	}
 
 	/// <summary>
@@ -117,7 +119,8 @@ namespace FluentValidation {
 
 		// This is the root context so it doesn't have a parent.
 		// Explicit implementation so it's not exposed necessarily.
-		IValidationContext IValidationContext.ParentContext => _parentContext;
+		IValidationContext IValidationContext<object>.ParentContext => _parentContext;
+		IValidationContext IValidationContext<T>.ParentContext => _parentContext;
 
 		/// <summary>
 		/// Whether the root validator should throw an exception when validation fails.
@@ -132,7 +135,7 @@ namespace FluentValidation {
 		/// <returns></returns>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="NotSupportedException"></exception>
-		public static ValidationContext<T> GetFromNonGenericContext(IValidationContext context) {
+		public static ValidationContext<T> GetFromNonGenericContext(IValidationContext<object> context) {
 			if (context == null) throw new ArgumentNullException(nameof(context));
 
 			// Already of the correct type.

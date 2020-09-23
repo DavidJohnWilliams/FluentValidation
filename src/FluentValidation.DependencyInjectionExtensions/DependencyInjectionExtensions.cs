@@ -36,6 +36,15 @@ namespace FluentValidation {
 		/// <param name="context"></param>
 		/// <returns></returns>
 		/// <exception cref="InvalidOperationException"></exception>
+		public static IServiceProvider GetServiceProvider<T>(this IValidationContext<T> context)
+			=> Get(context.RootContextData);
+
+		/// <summary>
+		/// Gets the service provider associated with the validation context.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <returns></returns>
+		/// <exception cref="InvalidOperationException"></exception>
 		public static IServiceProvider GetServiceProvider(this IValidationContext context)
 			=> Get(context.RootContextData);
 
@@ -75,7 +84,7 @@ namespace FluentValidation {
 
 			throw new InvalidOperationException("The service provider has not been configured to work with FluentValidation. Making use of InjectValidator or GetServiceProvider is only supported when using the automatic MVC integration.");
 		}
-		
+
 		/// <summary>
 		/// Sets the service provider associated with the validation context.
 		/// </summary>

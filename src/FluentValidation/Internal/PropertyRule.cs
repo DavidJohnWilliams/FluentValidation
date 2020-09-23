@@ -37,10 +37,10 @@ namespace FluentValidation.Internal {
 		private string _propertyDisplayName;
 		private string _propertyName;
 		private string[] _ruleSet = new string[0];
-		private Func<IValidationContext, bool> _condition;
-		private Func<IValidationContext, CancellationToken, Task<bool>> _asyncCondition;
+		private Func<IValidationContext<object>, bool> _condition;
+		private Func<IValidationContext<object>, CancellationToken, Task<bool>> _asyncCondition;
 		private string _displayName;
-		private Func<IValidationContext, string> _displayNameFactory;
+		private Func<IValidationContext<object>, string> _displayNameFactory;
 
 		/// <summary>
 		/// Condition for all validators in this rule.
@@ -218,7 +218,7 @@ namespace FluentValidation.Internal {
 		/// <summary>
 		/// Display name for the property.
 		/// </summary>
-		public string GetDisplayName(IValidationContext context)
+		public string GetDisplayName(IValidationContext<object> context)
 			=> _displayNameFactory?.Invoke(context) ?? _displayName ?? _propertyDisplayName;
 
 		/// <summary>
@@ -430,7 +430,7 @@ namespace FluentValidation.Internal {
 		/// </summary>
 		/// <param name="predicate"></param>
 		/// <param name="applyConditionTo"></param>
-		public void ApplyCondition(Func<IValidationContext, bool> predicate, ApplyConditionTo applyConditionTo = ApplyConditionTo.AllValidators) {
+		public void ApplyCondition(Func<IValidationContext<object>, bool> predicate, ApplyConditionTo applyConditionTo = ApplyConditionTo.AllValidators) {
 			// Default behaviour for When/Unless as of v1.3 is to apply the condition to all previous validators in the chain.
 			if (applyConditionTo == ApplyConditionTo.AllValidators) {
 				foreach (var validator in Validators) {
@@ -451,7 +451,7 @@ namespace FluentValidation.Internal {
 		/// </summary>
 		/// <param name="predicate"></param>
 		/// <param name="applyConditionTo"></param>
-		public void ApplyAsyncCondition(Func<IValidationContext, CancellationToken, Task<bool>> predicate, ApplyConditionTo applyConditionTo = ApplyConditionTo.AllValidators) {
+		public void ApplyAsyncCondition(Func<IValidationContext<object>, CancellationToken, Task<bool>> predicate, ApplyConditionTo applyConditionTo = ApplyConditionTo.AllValidators) {
 			// Default behaviour for When/Unless as of v1.3 is to apply the condition to all previous validators in the chain.
 			if (applyConditionTo == ApplyConditionTo.AllValidators) {
 				foreach (var validator in Validators) {
@@ -485,7 +485,6 @@ namespace FluentValidation.Internal {
 				var original = _asyncCondition;
 				_asyncCondition = async (ctx, ct) => await condition(ctx, ct) && await original(ctx, ct);
 			}
-
 		}
 	}
 }

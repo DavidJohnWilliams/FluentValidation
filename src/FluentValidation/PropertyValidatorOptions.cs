@@ -27,11 +27,17 @@ namespace FluentValidation {
 	/// <summary>
 	/// Validator options.
 	/// </summary>
-	public class PropertyValidatorOptions {
+	public class PropertyValidatorOptions : PropertyValidatorOptions<object,object> {
+	}
+
+	/// <summary>
+	/// Validator options.
+	/// </summary>
+	public class PropertyValidatorOptions<T, TProperty> {
 		private string _errorMessage;
-		private Func<PropertyValidatorContext, string> _errorMessageFactory;
-		private Func<IValidationContext, bool> _condition;
-		private Func<IValidationContext, CancellationToken, Task<bool>> _asyncCondition;
+		private Func<IPropertyValidatorContext<T,TProperty>, string> _errorMessageFactory;
+		private Func<IValidationContext<T>, bool> _condition;
+		private Func<IValidationContext<T>, CancellationToken, Task<bool>> _asyncCondition;
 
 		/// <summary>
 		/// Whether or not this validator has a condition associated with it.
@@ -47,7 +53,7 @@ namespace FluentValidation {
 		/// Adds a condition for this validator. If there's already a condition, they're combined together with an AND.
 		/// </summary>
 		/// <param name="condition"></param>
-		public void ApplyCondition(Func<IValidationContext, bool> condition) {
+		public void ApplyCondition(Func<IValidationContext<T>, bool> condition) {
 			if (_condition == null) {
 				_condition = condition;
 			}
@@ -61,7 +67,7 @@ namespace FluentValidation {
 		/// Adds a condition for this validator. If there's already a condition, they're combined together with an AND.
 		/// </summary>
 		/// <param name="condition"></param>
-		public void ApplyAsyncCondition(Func<IValidationContext, CancellationToken, Task<bool>> condition) {
+		public void ApplyAsyncCondition(Func<IValidationContext<T>, CancellationToken, Task<bool>> condition) {
 			if (_asyncCondition == null) {
 				_asyncCondition = condition;
 			}
@@ -71,7 +77,7 @@ namespace FluentValidation {
 			}
 		}
 
-		internal bool InvokeCondition(IValidationContext context) {
+		internal bool InvokeCondition(IValidationContext<T> context) {
 			if (_condition != null) {
 				return _condition(context);
 			}
@@ -79,7 +85,7 @@ namespace FluentValidation {
 			return true;
 		}
 
-		internal async Task<bool> InvokeAsyncCondition(IValidationContext context, CancellationToken token) {
+		internal async Task<bool> InvokeAsyncCondition(IValidationContext<T> context, CancellationToken token) {
 			if (_asyncCondition != null) {
 				return await _asyncCondition(context, token);
 			}
@@ -90,12 +96,12 @@ namespace FluentValidation {
 		/// <summary>
 		/// Function used to retrieve custom state for the validator
 		/// </summary>
-		public Func<PropertyValidatorContext, object> CustomStateProvider { get; set; }
+		public Func<IPropertyValidatorContext<T,TProperty>, object> CustomStateProvider { get; set; }
 
 		/// <summary>
 		/// Function used to retrieve the severity for the validator
 		/// </summary>
-		public Func<PropertyValidatorContext, Severity> SeverityProvider { get; set; }
+		public Func<IPropertyValidatorContext<T,TProperty>, Severity> SeverityProvider { get; set; }
 
 		/// <summary>
 		/// Retrieves the error code.
@@ -114,7 +120,7 @@ namespace FluentValidation {
 		/// </summary>
 		/// <param name="context">The current property validator context.</param>
 		/// <returns>Either the formatted or unformatted error message.</returns>
-		public string GetErrorMessage(PropertyValidatorContext context) {
+		public string GetErrorMessage(IPropertyValidatorContext<T,TProperty> context) {
 			string rawTemplate = _errorMessageFactory?.Invoke(context) ?? _errorMessage ?? GetDefaultMessageTemplate();
 
 			if (context == null) {
@@ -128,7 +134,7 @@ namespace FluentValidation {
 		/// Sets the overridden error message template for this validator.
 		/// </summary>
 		/// <param name="errorFactory">A function for retrieving the error message template.</param>
-		public void SetErrorMessage(Func<PropertyValidatorContext, string> errorFactory) {
+		public void SetErrorMessage(Func<IPropertyValidatorContext<T,TProperty>, string> errorFactory) {
 			_errorMessageFactory = errorFactory;
 			_errorMessage = null;
 		}
@@ -142,5 +148,4 @@ namespace FluentValidation {
 			_errorMessageFactory = null;
 		}
 	}
-	
 }
