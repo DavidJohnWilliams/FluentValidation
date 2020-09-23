@@ -138,7 +138,7 @@ namespace FluentValidation.Tests {
 		public void Calling_validate_should_delegate_to_underlying_validator() {
 			var person = new Person {Surname = "Foo"};
 			var validator = new Mock<IPropertyValidator>();
-			validator.Setup(x => x.Options).Returns(new PropertyValidatorOptions());
+			validator.Setup(x => x.Options).Returns(new PropValidatorOptionsHack());
 			builder.SetValidator(validator.Object);
 
 			_rule.Validate(new ValidationContext<Person>(person, new PropertyChain(), new DefaultValidatorSelector())).ToList();
@@ -150,7 +150,7 @@ namespace FluentValidation.Tests {
 		public async Task Calling_ValidateAsync_should_delegate_to_underlying_sync_validator() {
 			var person = new Person { Surname = "Foo" };
 			var validator = new Mock<IPropertyValidator>();
-			validator.Setup(x => x.Options).Returns(new PropertyValidatorOptions());
+			validator.Setup(x => x.Options).Returns(new PropValidatorOptionsHack());
 			builder.SetValidator(validator.Object);
 
 			await _rule.ValidateAsync(new ValidationContext<Person>(person, new PropertyChain(), new DefaultValidatorSelector()), new CancellationToken());
@@ -268,6 +268,12 @@ namespace FluentValidation.Tests {
 
 			protected override string GetDefaultMessageTemplate() {
 				return Localized(nameof(NotNullValidator));
+			}
+		}
+
+		private class PropValidatorOptionsHack : PropertyValidator {
+			protected override bool IsValid(PropertyValidatorContext context) {
+				throw new NotImplementedException();
 			}
 		}
 	}

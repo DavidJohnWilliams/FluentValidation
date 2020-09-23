@@ -108,6 +108,6 @@
 		public MessageFormatter MessageFormatter => _context.MessageFormatter;
 		public object InstanceToValidate => _context.InstanceToValidate;
 		public object PropertyValue => _context.PropertyValue;
-		public IValidationContext ParentContext => _context.ParentContext;
+		public IValidationContext ParentContext => (IValidationContext) _context.ParentContext;
 	}
 }

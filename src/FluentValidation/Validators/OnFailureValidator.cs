@@ -7,22 +7,22 @@
 	using System.Threading.Tasks;
 
 	public class OnFailureValidator<T> : NoopPropertyValidator, IChildValidatorAdaptor {
-		private readonly IPropertyValidator _innerValidator;
+		private readonly PropertyValidator _innerValidator;
 		private readonly Action<T, PropertyValidatorContext, string> _onFailure;
 
-		public OnFailureValidator(IPropertyValidator innerValidator, Action<T, PropertyValidatorContext, string> onFailure) {
+		public OnFailureValidator(PropertyValidator innerValidator, Action<T, PropertyValidatorContext, string> onFailure) {
 			_innerValidator = innerValidator;
 			_onFailure = onFailure;
 			// Make sure any conditions defined on the wrapped validator are applied
 			// to this validator too. They won't be invoked automatically, as conditions
 			// are invoked by the parent rule, which means that only *this* validator's
 			// conditions will be invoked, not the wrapped validator's conditions.
-			if (_innerValidator.Options.HasCondition) {
-				Options.ApplyCondition(_innerValidator.Options.InvokeCondition);
+			if (_innerValidator.HasCondition) {
+				ApplyCondition(_innerValidator.InvokeCondition);
 			}
 
-			if (_innerValidator.Options.HasAsyncCondition) {
-				Options.ApplyAsyncCondition(_innerValidator.Options.InvokeAsyncCondition);
+			if (_innerValidator.HasAsyncCondition) {
+				ApplyAsyncCondition(_innerValidator.InvokeAsyncCondition);
 			}
 		}
 
@@ -45,7 +45,7 @@
 		public override bool ShouldValidateAsynchronously(IValidationContext context) {
 			// If the user has applied an async condition, or the inner validator requires async
 			// validation then always go through the async path.
-			if (Options.HasAsyncCondition || _innerValidator.ShouldValidateAsynchronously(context)) return true;
+			if (HasAsyncCondition || _innerValidator.ShouldValidateAsynchronously(context)) return true;
 			return false;
 		}
 

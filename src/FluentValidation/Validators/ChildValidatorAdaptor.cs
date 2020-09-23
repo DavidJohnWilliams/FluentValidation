@@ -106,7 +106,7 @@ namespace FluentValidation.Validators {
 		}
 
 		public override bool ShouldValidateAsynchronously(IValidationContext context) {
-			return context.IsAsync() || Options.HasAsyncCondition;
+			return context.IsAsync() || HasAsyncCondition;
 		}
 
 		private void HandleCollectionIndex(PropertyValidatorContext context, out object originalIndex, out object index) {

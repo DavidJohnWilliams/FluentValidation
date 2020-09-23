@@ -33,7 +33,7 @@ namespace FluentValidation.AspNetCore
 			var formatter = cfg.MessageFormatterFactory().AppendPropertyName(Rule.GetDisplayName(null));
 			string message;
 			try {
-				message = Validator.Options.GetErrorMessage(null);
+				message = Validator.GetErrorMessage(null);
 			}
 			catch (NullReferenceException) {
 				message = cfg.LanguageManager.GetStringForValidator<CreditCardValidator>();

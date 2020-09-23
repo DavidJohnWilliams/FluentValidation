@@ -21,29 +21,64 @@ namespace FluentValidation.Validators {
 	using System.Collections.Generic;
 	using System.Threading;
 	using System.Threading.Tasks;
-	using Resources;
 	using Results;
 
-	/// <summary>
-	/// A custom property validator.
-	/// This interface should not be implemented directly in your code as it is subject to change.
-	/// Please inherit from <see cref="PropertyValidator">PropertyValidator</see> instead.
-	/// </summary>
-	public interface IPropertyValidator {
+	public interface IPropertyValidator<T, TProperty> {
 		/// <summary>
-		/// Performs validation
+		/// Whether or not this validator has a condition associated with it.
 		/// </summary>
-		/// <param name="context"></param>
-		/// <returns></returns>
-		IEnumerable<ValidationFailure> Validate(PropertyValidatorContext context);
+		bool HasCondition { get; }
 
 		/// <summary>
-		/// Performs validation asynchronously.
+		/// Whether or not this validator has an async condition associated with it.
+		/// </summary>
+		bool HasAsyncCondition { get; }
+
+		/// <summary>
+		/// Function used to retrieve custom state for the validator
+		/// </summary>
+		Func<IPropertyValidatorContext<T, TProperty>, object> CustomStateProvider { get; set; }
+
+		/// <summary>
+		/// Function used to retrieve the severity for the validator
+		/// </summary>
+		Func<IPropertyValidatorContext<T, TProperty>, Severity> SeverityProvider { get; set; }
+
+		/// <summary>
+		/// Retrieves the error code.
+		/// </summary>
+		string ErrorCode { get; set; }
+
+		/// <summary>
+		/// Gets the error message. If no context is specified, the raw message template is returned instead.
 		/// </summary>
 		/// <param name="context"></param>
-		/// <param name="cancellation"></param>
-		/// <returns></returns>
-		Task<IEnumerable<ValidationFailure>> ValidateAsync(PropertyValidatorContext context, CancellationToken cancellation);
+		/// <returns>String error message, or template.</returns>
+		string GetErrorMessage(IPropertyValidatorContext<T,TProperty> context);
+
+		/// <summary>
+		/// Sets the overridden error message template for this validator.
+		/// </summary>
+		/// <param name="errorFactory">A function for retrieving the error message template.</param>
+		void SetErrorMessage(Func<IPropertyValidatorContext<T,TProperty>, string> errorFactory);
+
+		/// <summary>
+		/// Sets the overridden error message template for this validator.
+		/// </summary>
+		/// <param name="errorMessage">The error message to set</param>
+		void SetErrorMessage(string errorMessage);
+
+		/// <summary>
+		/// Adds a condition for this validator. If there's already a condition, they're combined together with an AND.
+		/// </summary>
+		/// <param name="condition"></param>
+		void ApplyCondition(Func<IValidationContext<T>, bool> condition);
+
+		/// <summary>
+		/// Adds a condition for this validator. If there's already a condition, they're combined together with an AND.
+		/// </summary>
+		/// <param name="condition"></param>
+		void ApplyAsyncCondition(Func<IValidationContext<T>, CancellationToken, Task<bool>> condition);
 
 		/// <summary>
 		/// Determines whether this validator should be run asynchronously or not.
@@ -53,9 +88,33 @@ namespace FluentValidation.Validators {
 		bool ShouldValidateAsynchronously(IValidationContext context);
 
 		/// <summary>
+		/// Performs validation
+		/// </summary>
+		/// <param name="context"></param>
+		/// <returns></returns>
+		IEnumerable<ValidationFailure> Validate(IPropertyValidatorContext<T, TProperty> context);
+
+		/// <summary>
+		/// Performs validation asynchronously.
+		/// </summary>
+		/// <param name="context"></param>
+		/// <param name="cancellation"></param>
+		/// <returns></returns>
+		Task<IEnumerable<ValidationFailure>> ValidateAsync(IPropertyValidatorContext<T, TProperty> context, CancellationToken cancellation);
+	}
+
+	/// <summary>
+	/// A custom property validator.
+	/// This interface should not be implemented directly in your code as it is subject to change.
+	/// Please inherit from <see cref="PropertyValidator">PropertyValidator</see> instead.
+	/// </summary>
+	public interface IPropertyValidator : IPropertyValidator<object, object> {
+
+		/// <summary>
 		/// Additional options for configuring the property validator.
 		/// </summary>
-		PropertyValidatorOptions Options { get; }
+		[Obsolete("The options property is obsolete. Please call properties/methods on the IPropertyValidator instance directly.")]
+		PropertyValidator Options { get; }
 	}
 
 }

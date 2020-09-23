@@ -34,7 +34,7 @@ namespace FluentValidation.AspNetCore {
 
 			string messageTemplate;
 			try {
-				messageTemplate = Validator.Options.GetErrorMessage(null);
+				messageTemplate = Validator.GetErrorMessage(null);
 			}
 #pragma warning disable 618
 			catch (NullReferenceException) {

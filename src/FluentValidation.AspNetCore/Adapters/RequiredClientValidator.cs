@@ -38,7 +38,7 @@ namespace FluentValidation.AspNetCore {
 			var formatter = cfg.MessageFormatterFactory().AppendPropertyName(Rule.GetDisplayName(null));
 			string messageTemplate;
 			try {
-				messageTemplate = Validator.Options.GetErrorMessage(null);
+				messageTemplate = Validator.GetErrorMessage(null);
 			}
 			catch (NullReferenceException) {
 				messageTemplate = cfg.LanguageManager.GetStringForValidator<NotEmptyValidator>();

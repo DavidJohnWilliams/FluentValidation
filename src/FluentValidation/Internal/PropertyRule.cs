@@ -37,10 +37,10 @@ namespace FluentValidation.Internal {
 		private string _propertyDisplayName;
 		private string _propertyName;
 		private string[] _ruleSet = new string[0];
-		private Func<IValidationContext<object>, bool> _condition;
-		private Func<IValidationContext<object>, CancellationToken, Task<bool>> _asyncCondition;
+		private Func<IValidationContext, bool> _condition;
+		private Func<IValidationContext, CancellationToken, Task<bool>> _asyncCondition;
 		private string _displayName;
-		private Func<IValidationContext<object>, string> _displayNameFactory;
+		private Func<IValidationContext, string> _displayNameFactory;
 
 		/// <summary>
 		/// Condition for all validators in this rule.
@@ -218,7 +218,7 @@ namespace FluentValidation.Internal {
 		/// <summary>
 		/// Display name for the property.
 		/// </summary>
-		public string GetDisplayName(IValidationContext<object> context)
+		public string GetDisplayName(IValidationContext context)
 			=> _displayNameFactory?.Invoke(context) ?? _displayName ?? _propertyDisplayName;
 
 		/// <summary>

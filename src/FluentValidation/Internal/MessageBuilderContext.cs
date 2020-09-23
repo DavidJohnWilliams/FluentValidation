@@ -4,16 +4,16 @@
 	using Validators;
 
 	public class MessageBuilderContext {
-		private PropertyValidatorContext _innerContext;
+		private IPropertyValidatorContext<object,object> _innerContext;
 
-		public MessageBuilderContext(PropertyValidatorContext innerContext, IPropertyValidator propertyValidator) {
+		public MessageBuilderContext(IPropertyValidatorContext<object,object> innerContext, IPropertyValidator<object,object> propertyValidator) {
 			_innerContext = innerContext;
 			PropertyValidator = propertyValidator;
 		}
 
-		public IPropertyValidator PropertyValidator { get; }
+		public IPropertyValidator<object,object> PropertyValidator { get; }
 
-		public IValidationContext ParentContext => _innerContext.ParentContext;
+		public IValidationContext ParentContext => (IValidationContext) _innerContext.ParentContext;
 
 		public PropertyRule Rule => _innerContext.Rule;
 
@@ -27,10 +27,7 @@
 		public object PropertyValue => _innerContext.PropertyValue;
 
 		public string GetDefaultMessage() {
-			return PropertyValidator.Options.GetErrorMessage(_innerContext);
-		}
-		public static implicit operator PropertyValidatorContext(MessageBuilderContext ctx) {
-			return ctx._innerContext;
+			return PropertyValidator.GetErrorMessage(_innerContext);
 		}
 	}
 }

@@ -47,7 +47,7 @@ namespace FluentValidation.AspNetCore {
 
 			string message;
 			try {
-				message = lengthVal.Options.GetErrorMessage(null);
+				message = lengthVal.GetErrorMessage(null);
 			}
 			catch (NullReferenceException) {
 				if (lengthVal is ExactLengthValidator) {

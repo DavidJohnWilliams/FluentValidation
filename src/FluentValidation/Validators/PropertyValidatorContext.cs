@@ -44,6 +44,14 @@ namespace FluentValidation.Validators {
 		public PropertyValidatorContext(IValidationContext<object> parentContext, PropertyRule rule, string propertyName, Lazy<object> propertyValueAccessor)
 			: base(parentContext, rule, propertyName, propertyValueAccessor) {
 		}
+
+		internal static PropertyValidatorContext FromGeneric(IPropertyValidatorContext<object, object> context) {
+			if (context is PropertyValidatorContext p) {
+				return p;
+			}
+
+			return new PropertyValidatorContext(context.ParentContext, context.Rule, context.PropertyName, context.PropertyValue);
+		}
 	}
 
 	public class PropertyValidatorContext<T, TProperty> : IPropertyValidatorContext<T, TProperty>, IPropertyValidatorContext {
